@@ -37,7 +37,7 @@ func fillRect(rgba *image.RGBA, rect image.Rectangle, color color.Color) {
 	}
 }
 
-func divide(img image.Image, rwidth, rheight int) {
+func pixelize(img image.Image, rwidth, rheight int) {
 	b := img.Bounds()
 
 
@@ -83,5 +83,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	divide(img, 610, 60)
+	pixelize(img, 50, 50)
 }
