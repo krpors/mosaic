@@ -10,24 +10,24 @@ import (
 
 // Calculates the average color used in the specified rectangle in the image.
 func calcAvg(img image.Image, rect image.Rectangle) color.Color {
-	var r, g, b, iteration uint32
+	var r, g, b float32
+	var iteration uint32
 	for x := rect.Min.X; x < rect.Max.X; x++ {
 		for y := rect.Min.Y; y < rect.Max.Y; y++ {
 			cr, cg, cb, _ := img.At(x, y).RGBA()
-			r += cr
-			g += cg
-			b += cb
+			r += float32(cr)
+			g += float32(cg)
+			b += float32(cb)
 			iteration++
 		}
 	}
 
-	// We'll divide the r,g,b parts by the amount of iterations, then strip off the
-	// alpha part so we can return it as an RGBA
-	avgRed := uint8((r / iteration) >> 8)
-	avgGreen := uint8((g / iteration) >> 8)
-	avgBlue := uint8((b / iteration) >> 8)
+	ar := uint16(r / float32(iteration))
+	ag := uint16(g / float32(iteration))
+	ab := uint16(b / float32(iteration))
 
-	return color.NRGBA{avgRed, avgGreen, avgBlue, 0xFF}
+	c := color.RGBA64{ar, ag, ab, 0xFFFF}
+	return c
 }
 
 // Fills a rectangle in the specified rgba with the given color.
@@ -96,7 +96,7 @@ func pixelize(img image.Image, rwidth, rheight int) image.Image {
 }
 
 func main() {
-	f, err := os.Open("img.jpg")
+	f, err := os.Open("text.jpg")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,13 +105,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dsimage := downscaleRatio(img, 3)
 
 	of, err := os.Create("/home/dump/lol2.jpg")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	jpeg.Encode(of, dsimage, &jpeg.Options{jpeg.DefaultQuality})
-
+	simg := downscaleRatio(img, 6)
+	jpeg.Encode(of, simg, &jpeg.Options{100})
 }
