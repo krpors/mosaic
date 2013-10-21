@@ -10,21 +10,21 @@ import (
 
 // Calculates the average color used in the specified rectangle in the image.
 func calcAvg(img image.Image, rect image.Rectangle) color.Color {
-	var r, g, b float32
+	var r, g, b int64
 	var iteration uint32
 	for x := rect.Min.X; x < rect.Max.X; x++ {
 		for y := rect.Min.Y; y < rect.Max.Y; y++ {
 			cr, cg, cb, _ := img.At(x, y).RGBA()
-			r += float32(cr)
-			g += float32(cg)
-			b += float32(cb)
+			r += int64(cr)
+			g += int64(cg)
+			b += int64(cb)
 			iteration++
 		}
 	}
 
-	ar := uint16(r / float32(iteration))
-	ag := uint16(g / float32(iteration))
-	ab := uint16(b / float32(iteration))
+	ar := uint16(r / int64(iteration))
+	ag := uint16(g / int64(iteration))
+	ab := uint16(b / int64(iteration))
 
 	c := color.RGBA64{ar, ag, ab, 0xFFFF}
 	return c
@@ -105,11 +105,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-
 	of, err := os.Create("/home/dump/lol2.jpg")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	r, g, b, _ := calcAvg(img, img.Bounds()).RGBA()
+	log.Println(r>>8, g>>8, b>>8)
+
 	simg := downscaleRatio(img, 6)
 	jpeg.Encode(of, simg, &jpeg.Options{100})
 }
