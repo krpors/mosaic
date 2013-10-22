@@ -4,14 +4,16 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
+	"image/png"
 	"log"
 	"os"
+	"strings"
 )
 
 // Calculates the average color used in the specified rectangle in the image.
 func calcAvg(img image.Image, rect image.Rectangle) color.Color {
 	var r, g, b int64
-	var iteration uint32
+	var iteration int64
 	for x := rect.Min.X; x < rect.Max.X; x++ {
 		for y := rect.Min.Y; y < rect.Max.Y; y++ {
 			cr, cg, cb, _ := img.At(x, y).RGBA()
@@ -22,9 +24,9 @@ func calcAvg(img image.Image, rect image.Rectangle) color.Color {
 		}
 	}
 
-	ar := uint16(r / int64(iteration))
-	ag := uint16(g / int64(iteration))
-	ab := uint16(b / int64(iteration))
+	ar := uint16(r / iteration)
+	ag := uint16(g / iteration)
+	ab := uint16(b / iteration)
 
 	c := color.RGBA64{ar, ag, ab, 0xFFFF}
 	return c
@@ -95,24 +97,48 @@ func pixelize(img image.Image, rwidth, rheight int) image.Image {
 	return newImage
 }
 
+// Handy dandy open file.
+func openImage(ff string) image.Image {
+	f, err := os.Open(ff)
+	defer f.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var img image.Image
+	if strings.HasSuffix(ff, ".png") {
+		img, err = png.Decode(f)
+	} else if strings.HasSuffix(ff, ".jpg") {
+		img, err = jpeg.Decode(f)
+	} else {
+		log.Fatal("unrecognized image format")
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return img
+}
+
+// Handy dandy write image.
+func writeImage(ff string, img image.Image) {
+	of, err := os.Create(ff)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if strings.HasSuffix(ff, ".png") {
+		err = png.Encode(of, img)
+	} else if strings.HasSuffix(ff, ".jpg") {
+		jpeg.Encode(of, img, &jpeg.Options{100})
+	} else {
+		log.Fatal("unrecognized image format")
+	}
+}
+
 func main() {
-	f, err := os.Open("text.jpg")
-	if err != nil {
-		log.Fatal(err)
-	}
-	img, err := jpeg.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	of, err := os.Create("/home/dump/lol2.jpg")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	r, g, b, _ := calcAvg(img, img.Bounds()).RGBA()
-	log.Println(r>>8, g>>8, b>>8)
-
-	simg := downscaleRatio(img, 6)
-	jpeg.Encode(of, simg, &jpeg.Options{100})
+	img := openImage("text.jpg")
+	simg := downscaleRatio(img, 3) 
+	writeImage("/home/dump/lol2.jpg", simg)
 }
