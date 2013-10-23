@@ -1,4 +1,4 @@
-moasic
+mosaic
 ======
 
 My ridiculous attempt to create a photomosaic application using the Go
